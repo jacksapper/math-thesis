@@ -14,7 +14,7 @@ INTERVAL_LENGTH = (UBOUND-LBOUND)/(POINTS-1)
 D0 = .5*np.asmatrix(np.eye(POINTS-1,POINTS) + np.roll(np.eye(POINTS-1,POINTS),1,1))
 D1 = (1/INTERVAL_LENGTH)*np.asmatrix(-1*np.eye(POINTS-1,POINTS) + np.roll(np.eye(POINTS-1,POINTS),1,1))
 D = D1-D0
-
+A = D1.T * D1 + D0.T * D0
 #---FUNCTIONS---
 def step_size(u, v, tech='dynamic', size=.00001):
     if tech=='dynamic':
@@ -33,6 +33,10 @@ def df(u):
     A=(D.T*D)*u.T
     return A.T
     
+def sobolev(u):
+    return np.linalg.solve(A,u.T)
+    
+    
 def graph(x,y1,y2):
     plt.plot(x,y1)
     plt.plot(x,y2)
@@ -41,13 +45,14 @@ def graph(x,y1,y2):
 #---MAIN---
 x = np.asmatrix(np.linspace(LBOUND,UBOUND,POINTS))
 yold = np.asmatrix(np.zeros(POINTS))
-ynew = np.asmatrix(4. * np.ones(POINTS))
+ynew = np.asmatrix(12. * np.ones(POINTS))
+#ynew = np.cos(x)
 yexact = np.exp(x)
 
 k = 0
 while f(ynew) > EPSILON:
-    grad = df(ynew)
-    s = step_size(ynew,grad)
+    grad = sobolev(df(ynew)).T
+    s = step_size((D*ynew.T).T,(D*grad.T).T)
     yold = np.copy(ynew)
     ynew = yold - s*grad
     if k%100 == 0:
