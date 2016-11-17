@@ -5,10 +5,10 @@ import matplotlib.pyplot as plt
 
 #---CONSTANTS---
 LBOUND = 0.
-UBOUND = 1.
-POINTS = 50
+UBOUND = 2.
+POINTS = 200
 EPSILON = 10**-3
-INITIAL = 2
+INITIAL = (0,1)
 
 #---DERIVED CONSTANTS---DON'T CHANGE THESE, CHANGE THE REAL CONSTANTS
 INTERVAL_LENGTH = (UBOUND-LBOUND)/(POINTS-1)
@@ -16,10 +16,10 @@ D0 = .5*np.asmatrix(np.eye(POINTS-1,POINTS) + np.roll(np.eye(POINTS-1,POINTS),1,
 D1 = (1/INTERVAL_LENGTH)*np.asmatrix(-1*np.eye(POINTS-1,POINTS) + np.roll(np.eye(POINTS-1,POINTS),1,1))
 D = D1-D0
 A = D1.T * D1 + D0.T * D0
-
+k = 0
 
 #---FUNCTIONS---
-def step_size(u, v, tech='dynamic', size=.00001):
+def step_size(u, v, tech='dynamic', size=EPSILON/10):
     if tech=='dynamic':
         upper = u.T*v
         lower = v.T*v
@@ -33,11 +33,16 @@ def f(u):
     
 #u and v need to be column matrices not arrays for the * operator to work correctly
 def df(u):
-    A=(D.T*D)*u
-    return A
+    grad2=(D.T*D)*u
+    if INITIAL is not None:
+        grad2[0,0] = 0
+    return grad2
     
 def sobolev(u):
-    return np.linalg.solve(A,u)
+    gradH = np.linalg.solve(A,u)
+    if INITIAL is not None:
+        gradH[0,0] = 0
+    return gradH
     
 def graph(x,y1,y2):
     plt.plot(x,y1)
@@ -50,8 +55,9 @@ yold = np.asmatrix(np.zeros(POINTS)).T
 ynew = np.asmatrix(12. * np.ones(POINTS)).T
 yexact = 2*np.exp(x)
 
-ynew[0,0] = INITIAL
-k = 0
+if INITIAL is not None:
+    ynew[0,0] = INITIAL[1]
+
 while f(ynew) > EPSILON:
     grad = sobolev(df(ynew))
     s = step_size((D*ynew),(D*grad),'dynamic')
