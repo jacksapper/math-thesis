@@ -53,7 +53,7 @@ def graph(x,y1,y2):
 x = np.asmatrix(np.linspace(LBOUND,UBOUND,POINTS)).T
 yold = np.asmatrix(np.zeros(POINTS)).T
 ynew = np.asmatrix(12. * np.ones(POINTS)).T
-yexact = 2*np.exp(x)
+yexact = np.exp(x)
 
 if INITIAL is not None:
     index = np.argmin(abs(x-INITIAL[0]))
