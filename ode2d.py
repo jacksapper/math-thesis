@@ -7,6 +7,7 @@
 #---IMPORTS---
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 #---CONSTANTS---
 LBOUND  = -100.
@@ -43,6 +44,24 @@ def graph(x,y1,y2=None):
     plt.plot(x,y1)
     if y2 is not None:
         plt.plot(x,y2)
+        
+def graph3d(x,y,t):
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+    ax.plot(x.A1, y.A1, t.A1, label='parametric curve')
+    ax.legend()
+    plt.show()
+    
+def save_graph(x,y):
+    plt.plot(x,y)
+    plt.savefig('iter'+str(k)+'.png')
+    
+def save_graph3d(x,y,t):
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+    ax.plot(x.A1, y.A1, t.A1, label='parametric curve')
+    ax.legend()
+    plt.savefig('iter'+str(k)+'.png')
     
 #---MAIN---
 t = np.asmatrix(np.linspace(LBOUND,UBOUND,POINTS)).T
@@ -53,17 +72,16 @@ y = u[POINTS:]
 
 
 k = 0
-while f(u) > EPSILON:
+while f(u) > EPSILON and np.isfinite(f(u)):
     grad = df(u)
-    s = EPSILON/8
+    s = 1*EPSILON
     u_old = np.copy(u)
     u -= s*grad
     k=k+1
-    if k%100 == 0:
+    if k%10 == 0:
         print(k, f(u))
-    if k%10000 == 0:
-        plt.plot(x,y)
-        plt.savefig('iter'+str(k)+'.png')
+    if k%100 == 0:
+        graph(x,y)
 
 
 
