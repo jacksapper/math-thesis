@@ -7,14 +7,18 @@
 #---IMPORTS---
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 
 #---CONSTANTS---
 LBOUND  = -100.
 UBOUND  = 100.
-POINTS  = 100
+POINTS  = 1000
 EPSILON = 10**-3
 INITIAL = None
+
+a = 1
+b = 2
+c = -2
+d = 1
 
 #---DERIVED CONSTANTS---DON'T CHANGE THESE, CHANGE THE REAL CONSTANTS
 INTERVAL_LENGTH = (UBOUND-LBOUND)/(POINTS-1)
@@ -24,7 +28,7 @@ D1   = (1/INTERVAL_LENGTH)*np.asmatrix(-1*np.eye(POINTS-1,POINTS) + np.roll(np.e
 ZERO = np.zeros(D0.shape)
 
 
-D    = np.concatenate(( np.concatenate( (D1, D0  ), axis=0) , np.concatenate( (-D0, D1 ), axis=0)),axis=1) 
+D    = np.concatenate(( np.concatenate( (D1-a*D0, -c*D0  ), axis=0) , np.concatenate( (-b*D0, D1-d*D0 ), axis=0)),axis=1) 
 A0   = np.concatenate(( np.concatenate( (D0, ZERO), axis=0) , np.concatenate( (ZERO, D0), axis=0)),axis=1) 
 A1   = np.concatenate(( np.concatenate( (D1, ZERO), axis=0) , np.concatenate( (ZERO, D1), axis=0)),axis=1) 
 
@@ -66,7 +70,8 @@ def save_graph3d(x,y,t):
 #---MAIN---
 t = np.asmatrix(np.linspace(LBOUND,UBOUND,POINTS)).T
 u_old = np.asmatrix(np.zeros(2*POINTS)).T
-u = np.asmatrix(np.ones(2*POINTS)).T
+#u = np.asmatrix(np.ones(2*POINTS)).T
+u = np.asmatrix(np.random.rand(2*POINTS)).T
 x = u[:POINTS]
 y = u[POINTS:]
 
@@ -74,14 +79,14 @@ y = u[POINTS:]
 k = 0
 while f(u) > EPSILON and np.isfinite(f(u)):
     grad = df(u)
-    s = 1*EPSILON
+    s = 10*EPSILON
     u_old = np.copy(u)
     u -= s*grad
     k=k+1
     if k%10 == 0:
         print(k, f(u))
     if k%100 == 0:
-        graph(x,y)
+        graph3d(x,y,t)
 
 
 
