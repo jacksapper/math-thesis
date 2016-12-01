@@ -2,18 +2,21 @@
 #---IMPORTS---
 import numpy as np
 import matplotlib.pyplot as plt
-
+from scipy.sparse import csr_matrix
+from scipy.sparse.linalg import spsolve
 #---CONSTANTS---
 LBOUND = 0.
 UBOUND = 2.
-POINTS = 200
+POINTS = 1000
 EPSILON = 10**-3
-INITIAL = (1,1124)
+INITIAL = None
+
+#Matrix is O(POINTS**2)
 
 #---DERIVED CONSTANTS---DON'T CHANGE THESE, CHANGE THE REAL CONSTANTS
 INTERVAL_LENGTH = (UBOUND-LBOUND)/(POINTS-1)
-D0 = .5*np.asmatrix(np.eye(POINTS-1,POINTS) + np.roll(np.eye(POINTS-1,POINTS),1,1))
-D1 = (1/INTERVAL_LENGTH)*np.asmatrix(-1*np.eye(POINTS-1,POINTS) + np.roll(np.eye(POINTS-1,POINTS),1,1))
+D0 = (.5*np.asmatrix(np.eye(POINTS-1,POINTS) + np.roll(np.eye(POINTS-1,POINTS),1,1)))
+D1 = ((1/INTERVAL_LENGTH)*np.asmatrix(-1*np.eye(POINTS-1,POINTS) + np.roll(np.eye(POINTS-1,POINTS),1,1)))
 D = D1-D0
 A = D1.T * D1 + D0.T * D0
 k = 0
