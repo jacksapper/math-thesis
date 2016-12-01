@@ -1,25 +1,28 @@
 # -*- coding: utf-8 -*-
 #Code to solve:
-#   x' = y
-#   y' = -x
+#   x' =  [a,b] x
+#   y' =  [c,d] y
 
+#TODO: Sobolev + CSR
+#TODO: Initial
 
 #---IMPORTS---
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.sparse import csr_matrix
+from scipy.sparse.linalg import spsolve
 #---CONSTANTS---
 LBOUND  = -10.
 UBOUND  = 10.
-POINTS  = 50
+POINTS  = 200
 EPSILON = 10**-3
-INITIAL = (0,1,1)
+INITIAL = None
 #INITIAL = (t0,x0,y0) or None
-a = 1
-b = 2
-c = -2
-d = 1
+a = -1
+b = 0
+c = 0
+d = -2
 
 #---DERIVED CONSTANTS---DON'T CHANGE THESE, CHANGE THE REAL CONSTANTS
 INTERVAL_LENGTH = (UBOUND-LBOUND)/(POINTS-1)
@@ -29,16 +32,16 @@ D1   = np.asmatrix(-1*np.eye(POINTS-1,POINTS) + np.roll(np.eye(POINTS-1,POINTS),
 ZERO = np.zeros(D0.shape)
 
 
-D    = csr_matrix(np.concatenate(( np.concatenate( (D1-a*D0, -c*D0  ), axis=0) , np.concatenate( (-b*D0, D1-d*D0 ), axis=0)),axis=1))
-A0   = csr_matrix(np.concatenate(( np.concatenate( (D0, ZERO), axis=0) , np.concatenate( (ZERO, D0), axis=0)),axis=1))
-A1   = csr_matrix(np.concatenate(( np.concatenate( (D1, ZERO), axis=0) , np.concatenate( (ZERO, D1), axis=0)),axis=1))
+D    = (np.concatenate(( np.concatenate( (D1-a*D0, -c*D0  ), axis=0) , np.concatenate( (-b*D0, D1-d*D0 ), axis=0)),axis=1))
+A0   = (np.concatenate(( np.concatenate( (D0, ZERO), axis=0) , np.concatenate( (ZERO, D0), axis=0)),axis=1))
+A1   = (np.concatenate(( np.concatenate( (D1, ZERO), axis=0) , np.concatenate( (ZERO, D1), axis=0)),axis=1))
 
 A    = A0.T * A0 + A1.T * A1
 #A = A0.T * A0 + D.T * D
 
 #---FUNCTIONS---
 def f(u):
-    result = (D*u).T*(D*u)
+    result = .5*(D*u).T*(D*u)
     return .5*result[0,0] 
     
 def df(u):
@@ -48,7 +51,13 @@ def df(u):
         grad2[index+POINTS,0] = 0
     return grad2
     
-def step_size(u, v, tech='dynamic', size=5*EPSILON):
+def sobolev(u):
+    gradH = np.linalg.solve(A,u)
+    if INITIAL is not None:
+        gradH[index,0] = 0
+    return gradH
+    
+def step_size(u, v, tech='dynamic', size=1*EPSILON):
     if tech=='dynamic':
         upper = u.T*v
         lower = v.T*v
@@ -94,14 +103,13 @@ if INITIAL is not None:
 
 k = 0
 while f(u) > EPSILON and np.isfinite(f(u)):
-    grad = df(u)
-    s = step_size(D*u,D*grad,tech='static')
+    grad = sobolev(df(u))
+    s = step_size(D*u,D*grad,tech='dynamic')
     u_old = np.copy(u)
     u -= s*grad
     k=k+1
-    if k%100 == 0:
+    if k%1 == 0:
         print(k, f(u))
-    if k%100 == 0:
         graph3d(x,y,t)
 
 
