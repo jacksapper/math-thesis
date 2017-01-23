@@ -1,31 +1,44 @@
 # -*- coding: utf-8 -*-
 #Code to solve:
-#   x' =  [a,b] x
-#   y' =  [c,d] y
+#   x' =  [a,b] x + Px
+#   y' =  [c,d] y + Py
 
 #TODO: Sobolev + CSR
 #TODO: Initial
 
 #---IMPORTS---
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import spsolve
 #---CONSTANTS---
-LBOUND  = -5.
-UBOUND  = 5.
+LBOUND  = -10.
+UBOUND  = 10.
 POINTS  = 2**7
 EPSILON = 10**-12
-INITIAL = (0,2,3)
 #INITIAL = (t0,x0,y0) or None
-a = 0
-b = 1
-c = -4
+INITIAL = (1,1,1)
+
+t = np.mat(np.linspace(LBOUND,UBOUND,POINTS)).T
+u = np.mat(np.ones(2*POINTS)).T
+x = u[:POINTS]
+y = u[POINTS:]
+
+
+a = 1
+b = 0
+c = 0
 d = 0
+
+#Forcing term
+Px = 9
+Py = 0
 
 #---DERIVED CONSTANTS---DON'T CHANGE THESE, CHANGE THE REAL CONSTANTS
 INTERVAL_LENGTH = (UBOUND-LBOUND)/(POINTS-1)
+I = np.mat(np.eye(POINTS-1,POINTS))
 
 D0   = np.mat(np.eye(POINTS-1,POINTS) \
 + np.roll(np.eye(POINTS-1,POINTS),1,1)) / 2
@@ -63,7 +76,7 @@ def sobolev(u): #97.1 µs
         gradH[index] = 0
     return np.mat(gradH).T
     
-def step_size(u, v, tech='dynamic', size=1*EPSILON): #36 µs with Du and dynamic
+def step_size(u, v, tech='dynamic', size=5*EPSILON): #36 µs with Du and dynamic
     if tech=='dynamic':
         upper = u.T*v
         lower = v.T*v
@@ -95,10 +108,7 @@ def save_graph3d(x,y,t): #73.5 ms or 73,500 µs
     plt.savefig('iter'+str(k)+'.png')
     
 #---MAIN---
-t = np.mat(np.linspace(LBOUND,UBOUND,POINTS)).T
-u = np.mat(np.ones(2*POINTS)).T
-x = u[:POINTS]
-y = u[POINTS:]
+
 
 if INITIAL is not None:
     index = np.argmin(abs(t-INITIAL[0]))
@@ -114,7 +124,7 @@ while f(u) > EPSILON and np.isfinite(f(u)):
     s = step_size(D*u,D*grad,tech='dynamic') #36 µs
     u -= s*grad #4.27 µs
     k=k+1
-    if k%2**9 == 0:
+    if k%2**7 == 0:
         print(k,f(u)) #computing f(u) again takes 35.9 µs
         graph3d(x,y,t) #82.9 ms 
 

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 #---IMPORTS---
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.sparse import csr_matrix
@@ -7,16 +8,16 @@ from scipy.sparse.linalg import spsolve
 #---CONSTANTS---
 LBOUND = 0.
 UBOUND = 2.
-POINTS = 1000
+POINTS = 100
 EPSILON = 10**-3
-INITIAL = None
+INITIAL = (1,100)
 
 #Matrix is O(POINTS**2)
 
 #---DERIVED CONSTANTS---DON'T CHANGE THESE, CHANGE THE REAL CONSTANTS
 INTERVAL_LENGTH = (UBOUND-LBOUND)/(POINTS-1)
-D0 = (.5*np.asmatrix(np.eye(POINTS-1,POINTS) + np.roll(np.eye(POINTS-1,POINTS),1,1)))
-D1 = ((1/INTERVAL_LENGTH)*np.asmatrix(-1*np.eye(POINTS-1,POINTS) + np.roll(np.eye(POINTS-1,POINTS),1,1)))
+D0 = csr_matrix(.5*np.asmatrix(np.eye(POINTS-1,POINTS) + np.roll(np.eye(POINTS-1,POINTS),1,1)))
+D1 = csr_matrix((1/INTERVAL_LENGTH)*np.asmatrix(-1*np.eye(POINTS-1,POINTS) + np.roll(np.eye(POINTS-1,POINTS),1,1)))
 D = D1-D0
 A = D1.T * D1 + D0.T * D0
 k = 0
@@ -42,9 +43,9 @@ def df(u):
     return grad2
     
 def sobolev(u):
-    gradH = np.linalg.solve(A,u)
+    gradH = spsolve(A,u)
     if INITIAL is not None:
-        gradH[index,0] = 0
+        gradH[index] = 0
     return gradH
     
 def graph(x,y1,y2):
@@ -62,12 +63,12 @@ if INITIAL is not None:
     index = np.argmin(abs(x-INITIAL[0]))
     ynew[index,0] = INITIAL[1]
 
-while f(ynew) > EPSILON:
+while f(ynew) > EPSILON+2:
     grad = sobolev(df(ynew))
     s = step_size((D*ynew),(D*grad),'dynamic')
     yold = np.copy(ynew)
     ynew = yold - s*grad
-    if k%100 == 0:
+    if k%10 == 0:
         print(k, f(ynew))
     if k%1000 == 0:
         graph(x,ynew,yexact)
