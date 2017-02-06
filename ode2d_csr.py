@@ -19,7 +19,7 @@ UBOUND  = 10.
 POINTS  = 2**7
 EPSILON = 10**-12
 #INITIAL = (t0,x0,y0) or None
-INITIAL = (1,1,1)
+INITIAL = None
 
 t = np.mat(np.linspace(LBOUND,UBOUND,POINTS)).T
 u = np.mat(np.ones(2*POINTS)).T
@@ -27,9 +27,9 @@ x = u[:POINTS]
 y = u[POINTS:]
 
 
-a = 1
-b = 0
-c = 0
+a = 0
+b = 1
+c = -1
 d = 0
 
 #Forcing term
@@ -124,9 +124,10 @@ while f(u) > EPSILON and np.isfinite(f(u)):
     s = step_size(D*u,D*grad,tech='dynamic') #36 µs
     u -= s*grad #4.27 µs
     k=k+1
-    if k%2**7 == 0:
+    if k%2**4 == 0:
         print(k,f(u)) #computing f(u) again takes 35.9 µs
         graph3d(x,y,t) #82.9 ms 
+        #save_graph3d(x,y,t)
 
 graph3d(x,y,t)
 graph(x,y)
