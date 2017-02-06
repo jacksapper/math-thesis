@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 #---CONSTANTS---
 LBOUND = 0.
 UBOUND = 1.
-POINTS = 2**6
+POINTS = 3
 EPSILON = 10**-16
 INITIAL = None
 
@@ -29,7 +29,8 @@ def step_size(u, v, tech='dynamic', size=EPSILON/10):
         return size
     
 def f(u):
-    result = (D @ u).dot(D @ u)
+    f = D @ u
+    result = (f).dot(f)
     return .5*result
     
 #u and v need to be column matrices not arrays for the * operator to work correctly
@@ -58,7 +59,7 @@ yexact = np.exp(x)
 
 if INITIAL is not None:
     index = np.argmin(abs(x-INITIAL[0]))
-    ynew[index,0] = INITIAL[1]
+    ynew[index] = INITIAL[1]
 
 while f(ynew) > EPSILON:
     grad = sobolev(df(ynew))
