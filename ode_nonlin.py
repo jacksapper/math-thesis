@@ -3,9 +3,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import numpy.linalg as lin
+from scipy.sparse import csr_matrix
+from scipy.sparse.linalg import spsolve
 #---CONSTANTS---
-LBOUND = 1.
-UBOUND = 2.
+LBOUND = -1.
+UBOUND = 1.
 POINTS = 2**6
 EPSILON = 10**-16
 INITIAL = None
@@ -14,34 +16,35 @@ INITIAL = None
 
 #---DERIVED CONSTANTS---DON'T CHANGE THESE, CHANGE THE REAL CONSTANTS
 INTERVAL_LENGTH = (UBOUND-LBOUND)/(POINTS-1)
-D0 = .5*(np.eye(POINTS-1,POINTS) + np.roll(np.eye(POINTS-1,POINTS),1,1))
-D1 = (1/INTERVAL_LENGTH)*(-1*np.eye(POINTS-1,POINTS) + np.roll(np.eye(POINTS-1,POINTS),1,1))
+D0 = csr_matrix(.5*(np.eye(POINTS-1,POINTS) + np.roll(np.eye(POINTS-1,POINTS),1,1)))
+D1 = csr_matrix((1/INTERVAL_LENGTH)*(-1*np.eye(POINTS-1,POINTS) + np.roll(np.eye(POINTS-1,POINTS),1,1)))
 #D = D1 + D0
 k = 0
 A = D1.T @ D1 + D0.T @ D0
 
 #---FUNCTIONS---        
-def step_size(u, v, tech='dynamic', size=EPSILON/10):
+def step_size(u, v, tech='dynamic', size=.0001):
     if tech=='dynamic':
         upper = u.dot(v)
         lower = v.dot(v)
+        return upper/lower
     elif tech=='static':
         return size
     
-def f(u):
-    #f = D1 @ u + D0 @ (u**2)
-    f = D1 @ u + (D0 @ u)**2
-    result = .5*(f).dot(f) # .5 || f(u) ||**2
-    return result
+def f(u): #change discretized function here
+    return D1 @ u + D0 @ (u**2)
+    #return D1 @ u + (D0 @ u)**2
+        
+def df(u): #change frichet derivative here
+    return D1 + 2*D0.multiply(u)
+    #return D1 + 2*D0*u*D0
     
-def df(u,v):
-    L = D1 @ v
-    #NL = D0 @ (2*(u*v))
-    NL = 2*(D0 @ u)*(D0 @ v)
-    grad2 = L + NL
-    if INITIAL is not None:
-        grad2[index] = 0
-    return f(u) * np.append(grad2,grad2[len(grad2)-1])
+def phi(f):
+    return .5*f.dot(f)
+    
+def dphi(f,df):
+    return df.T @ f
+    
     
 def sobolev(u):
     gradH = lin.solve(A,u)
@@ -55,24 +58,23 @@ def graph(x,y1):
     
 #---MAIN---
 x = np.linspace(LBOUND,UBOUND,POINTS)
-yold = np.zeros(POINTS)
-ynew = 1*np.ones(POINTS)
+#y0 = np.zeros(POINTS)
+y = np.random.rand(POINTS)
 #yexact = np.exp(x)
-grad = np.random.rand(POINTS)
 
 if INITIAL is not None:
     index = np.argmin(abs(x-INITIAL[0]))
-    ynew[index] = INITIAL[1]
+    y[index] = INITIAL[1]
 
-while f(ynew) > EPSILON and np.isfinite(f(ynew)):
-    grad = (df(ynew,grad))
-    s = step_size((ynew),(grad),'static')
-    yold = np.copy(ynew)
-    ynew = yold - s*grad
+while phi(f(y)) > EPSILON and np.isfinite(phi(f(y))):
+    grad =  dphi( f(y), df(y) )
+    s = step_size(f(y),f(grad),'static')
+    y0 = np.copy(y)
+    y -= s*grad
     if k%2 == 0:
-        print(k, f(ynew))
-        graph(x,ynew)
+        print(k, phi(f(y)))
+        graph(x,y)
     k=k+1
 
-graph(x,ynew)
+graph(x,y)
 print(k)
