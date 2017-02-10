@@ -16,8 +16,13 @@ INITIAL = None
 
 #---DERIVED CONSTANTS---DON'T CHANGE THESE, CHANGE THE REAL CONSTANTS
 INTERVAL_LENGTH = (UBOUND-LBOUND)/(POINTS-1)
+<<<<<<< HEAD
 D0 = (.5*(np.eye(POINTS-1,POINTS) + np.roll(np.eye(POINTS-1,POINTS),1,1)))
 D1 = ((1/INTERVAL_LENGTH)*(-1*np.eye(POINTS-1,POINTS) + np.roll(np.eye(POINTS-1,POINTS),1,1)))
+=======
+D0 = .5*(np.eye(POINTS-1,POINTS) + np.roll(np.eye(POINTS-1,POINTS),1,1))
+D1 = (1/INTERVAL_LENGTH)*(-1*np.eye(POINTS-1,POINTS) + np.roll(np.eye(POINTS-1,POINTS),1,1))
+>>>>>>> d7586146040a05c90e1c8ca1f578a2e5793b2b90
 #D = D1 + D0
 k = 0
 A = D1.T @ D1 + D0.T @ D0
@@ -48,8 +53,6 @@ def dphi(f,df):
     
 def sobolev(u):
     gradH = lin.solve(A,u)
-    if INITIAL is not None:
-        gradH[index] = 0
     return gradH
     
 def graph(x,y1):
@@ -67,8 +70,15 @@ if INITIAL is not None:
     y[index] = INITIAL[1]
 
 while phi(f(y)) > EPSILON and np.isfinite(phi(f(y))):
+<<<<<<< HEAD
     grad =  sobolev(dphi( f(y), df(y) ))
     s = step_size(y,grad,'static')
+=======
+    grad =  dphi( f(y), df(y) )
+    if INITIAL is not None:
+        grad[index] = 0
+    s = step_size(f(y),f(grad),'dynamic')
+>>>>>>> d7586146040a05c90e1c8ca1f578a2e5793b2b90
     y0 = np.copy(y)
     y -= s*grad
     if k%2 == 0:
