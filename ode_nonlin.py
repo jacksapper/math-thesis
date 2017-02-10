@@ -16,8 +16,8 @@ INITIAL = None
 
 #---DERIVED CONSTANTS---DON'T CHANGE THESE, CHANGE THE REAL CONSTANTS
 INTERVAL_LENGTH = (UBOUND-LBOUND)/(POINTS-1)
-D0 = csr_matrix(.5*(np.eye(POINTS-1,POINTS) + np.roll(np.eye(POINTS-1,POINTS),1,1)))
-D1 = csr_matrix((1/INTERVAL_LENGTH)*(-1*np.eye(POINTS-1,POINTS) + np.roll(np.eye(POINTS-1,POINTS),1,1)))
+D0 = .5*(np.eye(POINTS-1,POINTS) + np.roll(np.eye(POINTS-1,POINTS),1,1))
+D1 = (1/INTERVAL_LENGTH)*(-1*np.eye(POINTS-1,POINTS) + np.roll(np.eye(POINTS-1,POINTS),1,1))
 #D = D1 + D0
 k = 0
 A = D1.T @ D1 + D0.T @ D0
@@ -36,7 +36,7 @@ def f(u): #change discretized function here
     #return D1 @ u + (D0 @ u)**2
         
 def df(u): #change frichet derivative here
-    return D1 + 2*D0.multiply(u)
+    return D1 + 2*D0*u
     #return D1 + 2*D0*u*D0
     
 def phi(f):
@@ -48,8 +48,6 @@ def dphi(f,df):
     
 def sobolev(u):
     gradH = lin.solve(A,u)
-    if INITIAL is not None:
-        gradH[index] = 0
     return gradH
     
 def graph(x,y1):
@@ -68,7 +66,9 @@ if INITIAL is not None:
 
 while phi(f(y)) > EPSILON and np.isfinite(phi(f(y))):
     grad =  dphi( f(y), df(y) )
-    s = step_size(f(y),f(grad),'static')
+    if INITIAL is not None:
+        grad[index] = 0
+    s = step_size(f(y),f(grad),'dynamic')
     y0 = np.copy(y)
     y -= s*grad
     if k%2 == 0:
