@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 #---CONSTANTS---
 LBOUND = 0.
 UBOUND = 1.
-POINTS = 3
+POINTS = 2**7
 EPSILON = 10**-16
 INITIAL = None
 
@@ -18,6 +18,8 @@ D1 = (1/INTERVAL_LENGTH)*(-1*np.eye(POINTS-1,POINTS) + np.roll(np.eye(POINTS-1,P
 D = D1-D0
 A = D1.T @ D1 + D0.T @ D0
 k = 0
+
+display = [1,10,200]
 
 #---FUNCTIONS---        
 def step_size(u, v, tech='dynamic', size=EPSILON/10):
@@ -47,14 +49,15 @@ def sobolev(u):
     return gradH
     
 def graph(x,y1,y2):
-    plt.plot(x,y1)
-    plt.plot(x,y2)
+    plt.plot(x,y1, label='Approximation')
+    plt.plot(x,y2, label='Exact Solution')
+    plt.legend(loc='lower left')
     plt.show()
     
 #---MAIN---
 x = np.linspace(LBOUND,UBOUND,POINTS).T
 yold = np.zeros(POINTS).T
-ynew = 12. * np.ones(POINTS).T
+ynew = 2. * np.ones(POINTS).T
 yexact = np.exp(x)
 
 if INITIAL is not None:
@@ -62,15 +65,16 @@ if INITIAL is not None:
     ynew[index] = INITIAL[1]
 
 while f(ynew) > EPSILON:
-    grad = sobolev(df(ynew))
-    s = step_size((D @ ynew),(D @ grad),'dynamic')
+    grad = (df(ynew))
+    #s = step_size((D @ ynew),(D @ grad),'dynamic')
+    s = .00001
     yold = np.copy(ynew)
     ynew = yold - s*grad
-    if k%10 == 0:
-        print(k, f(ynew))
-    if k%1000 == 0:
+    if k in display:
+        print("|",k,"|", f(ynew), "|", s,"|", ynew[POINTS//2],"|",grad[POINTS//2],"|")
         graph(x,ynew,yexact)
+        plt.savefig('/home/jason/Dropbox/thesis/img/bad-triv-test/{k}.png', dpi=150, bbox_inches='tight')
     k=k+1
 
 graph(x,ynew,yexact)
-print(k)
+print("|",k,"|", f(ynew), "|", s,"|", ynew[POINTS//2],"|",grad[POINTS//2],"|")

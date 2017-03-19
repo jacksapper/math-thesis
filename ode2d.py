@@ -15,7 +15,7 @@ from scipy.sparse.linalg import spsolve
 #---CONSTANTS---
 LBOUND  = -10.
 UBOUND  = 10.
-POINTS  = 2**8
+POINTS  = 2**6
 EPSILON = 10**-12
 INITIAL = (0,1,1)
 #INITIAL = (t0,x0,y0) or None
