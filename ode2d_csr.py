@@ -22,7 +22,7 @@ EPSILON = 10**-12
 INITIAL = None
 
 t = np.mat(np.linspace(LBOUND,UBOUND,POINTS)).T
-u = np.mat(np.ones(2*POINTS)).T
+u = np.mat(np.random.rand(2*POINTS)).T
 x = u[:POINTS]
 y = u[POINTS:]
 
@@ -124,7 +124,7 @@ while f(u) > EPSILON and np.isfinite(f(u)):
     s = step_size(D*u,D*grad,tech='dynamic') #36 µs
     u -= s*grad #4.27 µs
     k=k+1
-    if k%2**4 == 0:
+    if k%2**0 == 0:
         print(k,f(u)) #computing f(u) again takes 35.9 µs
         graph3d(x,y,t) #82.9 ms 
         #save_graph3d(x,y,t)

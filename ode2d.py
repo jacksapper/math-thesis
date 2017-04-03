@@ -56,6 +56,7 @@ def sobolev(u):
     gradH = np.linalg.solve(A,u)
     if INITIAL is not None:
         gradH[index,0] = 0
+        gradH[index+POINTS,0] = 0
     return gradH
     
 def step_size(u, v, tech='dynamic', size=1*EPSILON):
@@ -109,7 +110,7 @@ while f(u) > EPSILON and np.isfinite(f(u)):
     u_old = np.copy(u)
     u -= s*grad
     k=k+1
-    if k%10 == 0:
+    if k%2**5 == 0:
         print(k, f(u))
         graph3d(x,y,t)
 

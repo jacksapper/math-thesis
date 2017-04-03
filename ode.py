@@ -7,7 +7,7 @@ LBOUND = 0.
 UBOUND = 1.
 POINTS = 2**7
 EPSILON = 10**-16
-INITIAL = None
+INITIAL = (0,1)
 
 #Matrix is O(POINTS**2)
 
@@ -19,7 +19,7 @@ D = D1-D0
 A = D1.T @ D1 + D0.T @ D0
 k = 0
 
-display = [1,10,200]
+display = [0,1000,10000,100000,1200000]
 
 #---FUNCTIONS---        
 def step_size(u, v, tech='dynamic', size=EPSILON/10):
@@ -49,9 +49,10 @@ def sobolev(u):
     return gradH
     
 def graph(x,y1,y2):
-    plt.plot(x,y1, label='Approximation')
+    plt.plot(x,y1, 'r--',label='Approximation')
     plt.plot(x,y2, label='Exact Solution')
     plt.legend(loc='lower left')
+    #plt.savefig('/home/jason/Dropbox/thesis/img/good-triv-bdd/{num}.png'.format(num=k), dpi=150)
     plt.show()
     
 #---MAIN---
@@ -65,16 +66,15 @@ if INITIAL is not None:
     ynew[index] = INITIAL[1]
 
 while f(ynew) > EPSILON:
-    grad = (df(ynew))
-    #s = step_size((D @ ynew),(D @ grad),'dynamic')
-    s = .00001
+    grad = sobolev(df(ynew))
+    s = step_size((D @ ynew),(D @ grad),'dynamic')
+    #s = .00001
     yold = np.copy(ynew)
     ynew = yold - s*grad
-    if k in display:
-        print("|",k,"|", f(ynew), "|", s,"|", ynew[POINTS//2],"|",grad[POINTS//2],"|")
+    if k%2**3 == 0:
+        print("|",k,"|", round(f(ynew),3), "|", round(s,3),"|", round(ynew[POINTS//2],3),"|",round(grad[POINTS//2],3),"|")
         graph(x,ynew,yexact)
-        plt.savefig('/home/jason/Dropbox/thesis/img/bad-triv-test/{k}.png', dpi=150, bbox_inches='tight')
     k=k+1
 
-graph(x,ynew,yexact)
-print("|",k,"|", f(ynew), "|", s,"|", ynew[POINTS//2],"|",grad[POINTS//2],"|")
+#graph(x,ynew,yexact)
+print("|",k,"|", round(f(ynew),3), "|", round(s,3),"|", round(ynew[POINTS//2],3),"|",round(grad[POINTS//2],3),"|")
