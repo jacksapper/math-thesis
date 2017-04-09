@@ -36,7 +36,7 @@ ZERO = np.zeros(D0.shape)
            
 a = lambda x,y: 0
 b = lambda x,y: 2*y
-c = lambda x,y: -1
+c = lambda x,y: 1
 d = lambda x,y: 0
 
 #---DERIVED CONSTANTS---DON'T CHANGE THESE, CHANGE THE REAL CONSTANTS
@@ -50,21 +50,28 @@ A    = A0.T @ A0 + A1.T @ A1
 
 
 #---FUNCTIONS---
+def phi(u):
+    tmp = f(u)
+    return 0.5 * tmp.dot(tmp)
+
+
 def f(u):
-    result = .5*(D@u).T@(D@u)
-    return .5*result
+#    result = .5*(D@u).T@(D@u)
+    return A1 @ u - np.concatenate((D0 @ (y**2), D0 @ x),axis=0)
 
 def fprime(u):
-    return A1 @ u + 
+    return (np.concatenate(( np.concatenate( (D1-a(x,y)*D0, -c(x,y)*D0  ), axis=0) , np.concatenate( (-b(x,y)*D0, D1-d(x,y)*D0 ), axis=0)),axis=1))
     
 def df(u):
-    grad2 = (D.T @ D) @ u
+    grad2 = fprime(u).T @ f(u)
     if INITIAL is not None:
         grad2[index,0] = 0
         grad2[index+POINTS,0] = 0
     return grad2
     
 def sobolev(u):
+#    tmp = fprime(u)
+#    A = A0.T @ A0 + tmp.T @ tmp
     gradH = np.linalg.solve(A,u)
     if INITIAL is not None:
         gradH[index,0] = 0
@@ -121,14 +128,19 @@ if INITIAL is not None:
 
 k = 0
 D = updateD()
-while f(u) > EPSILON and np.isfinite(f(u)):
+while phi(u) > EPSILON and np.isfinite(phi(u)):
     grad = sobolev(df(u))
-    s = 10**-4
+    if k < 20:
+        s = 10**-1
+    else:
+        s = 1
+#    s = 10**-1
+#    s = 1
     u_old = np.copy(u)
     u -= s*grad
     k=k+1
     if k%2**5 == 0:
-        print(k, f(u))
+        print(k, phi(u))
         graph3d(x,y,t)
     D = updateD()
 
