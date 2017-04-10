@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 LBOUND = 0.
 UBOUND = 1.
 POINTS = 2**7
-EPSILON = 10**-16
+EPSILON = 10**-9
 INITIAL = (0,1)
 
 #Matrix is O(POINTS**2)
@@ -17,9 +17,9 @@ D0 = .5*(np.eye(POINTS-1,POINTS) + np.roll(np.eye(POINTS-1,POINTS),1,1))
 D1 = (1/INTERVAL_LENGTH)*(-1*np.eye(POINTS-1,POINTS) + np.roll(np.eye(POINTS-1,POINTS),1,1))
 D = D1-D0
 A = D1.T @ D1 + D0.T @ D0
-k = 0
+k = 1
 
-display = [0,1000,10000,100000,1200000]
+display = [1,2,3,4,5,6]
 
 #---FUNCTIONS---        
 def step_size(u, v, tech='dynamic', size=EPSILON/10):
@@ -53,7 +53,7 @@ def graph(x,y1,y2):
     plt.plot(x,y2, label='Exact Solution')
     plt.legend(loc='lower left')
     #plt.savefig('/home/jason/Dropbox/thesis/img/good-triv-bdd/{num}.png'.format(num=k), dpi=150)
-    plt.show()
+    #plt.show()
     
 #---MAIN---
 x = np.linspace(LBOUND,UBOUND,POINTS).T
@@ -65,16 +65,19 @@ if INITIAL is not None:
     index = np.argmin(abs(x-INITIAL[0]))
     ynew[index] = INITIAL[1]
 
-while f(ynew) > EPSILON:
+while f(ynew) > EPSILON and k <= max(display):
     grad = sobolev(df(ynew))
     s = step_size((D @ ynew),(D @ grad),'dynamic')
-    #s = .00001
+    #s = 10**-5
     yold = np.copy(ynew)
     ynew = yold - s*grad
-    if k%2**3 == 0:
+    if k in display:
         print("|",k,"|", round(f(ynew),3), "|", round(s,3),"|", round(ynew[POINTS//2],3),"|",round(grad[POINTS//2],3),"|")
-        graph(x,ynew,yexact)
+        plt.plot(x,ynew,label='k={num}'.format(num=k))
     k=k+1
 
 #graph(x,ynew,yexact)
-print("|",k,"|", round(f(ynew),3), "|", round(s,3),"|", round(ynew[POINTS//2],3),"|",round(grad[POINTS//2],3),"|")
+#print("|",k,"|", round(f(ynew),3), "|", round(s,3),"|", round(ynew[POINTS//2],3),"|",round(grad[POINTS//2],3),"|")
+plt.legend(loc='lower right')
+plt.savefig('/home/jason/Dropbox/thesis/newimg/sob-dyn-bdd.png',dpi=150)
+plt.show()

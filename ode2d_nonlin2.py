@@ -1,3 +1,11 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Apr 10 09:20:18 2017
+
+@author: jason
+"""
+
 # -*- coding: utf-8 -*-
 #Code to solve:
 #   x' =  [a,b] x
@@ -17,36 +25,40 @@ LBOUND  = -10.
 UBOUND  = 10.
 POINTS  = 2**6
 EPSILON = 10**-12
-INITIAL = (0,1,1)
+INITIAL = None
 #INITIAL = (t0,x0,y0) or None
-a = 0
-b = 1
-c = -1
-d = 0
 
-#---DERIVED CONSTANTS---DON'T CHANGE THESE, CHANGE THE REAL CONSTANTS
 INTERVAL_LENGTH = (UBOUND-LBOUND)/(POINTS-1)
-
-D0   = np.asmatrix(np.eye(POINTS-1,POINTS) + np.roll(np.eye(POINTS-1,POINTS),1,1)) / 2
-D1   = np.asmatrix(-1*np.eye(POINTS-1,POINTS) + np.roll(np.eye(POINTS-1,POINTS),1,1)) / INTERVAL_LENGTH
+D0   = (np.eye(POINTS-1,POINTS) + np.roll(np.eye(POINTS-1,POINTS),1,1)) / 2
+D1   = (-1*np.eye(POINTS-1,POINTS) + np.roll(np.eye(POINTS-1,POINTS),1,1)) / INTERVAL_LENGTH
 ZERO = np.zeros(D0.shape)
 
+           
+a = lambda x,y: 0
+b = lambda x,y: 2*y
+c = lambda x,y: -1
+d = lambda x,y: 0
 
-D    = (np.concatenate(( np.concatenate( (D1-a*D0, -c*D0  ), axis=0) , np.concatenate( (-b*D0, D1-d*D0 ), axis=0)),axis=1))
+#---DERIVED CONSTANTS---DON'T CHANGE THESE, CHANGE THE REAL CONSTANTS
+
+
 A0   = (np.concatenate(( np.concatenate( (D0, ZERO), axis=0) , np.concatenate( (ZERO, D0), axis=0)),axis=1))
 A1   = (np.concatenate(( np.concatenate( (D1, ZERO), axis=0) , np.concatenate( (ZERO, D1), axis=0)),axis=1))
 
-A    = A0.T * A0 + A1.T * A1
+A    = A0.T @ A0 + A1.T @ A1
 #A = A0.T * A0 + D.T * D
 
 
 #---FUNCTIONS---
 def f(u):
-    result = .5*(D*u).T*(D*u)
-    return .5*result[0,0] 
+    result = .5*(D@u).T@(D@u)
+    return .5*result
+
+def fprime(u):
+    return A1 @ u + 
     
 def df(u):
-    grad2 = D.T*D*u
+    grad2 = (D.T @ D) @ u
     if INITIAL is not None:
         grad2[index,0] = 0
         grad2[index+POINTS,0] = 0
@@ -75,7 +87,7 @@ def graph(x,y1,y2=None):
 def graph3d(x,y,t):
     fig = plt.figure()
     ax = fig.gca(projection='3d')
-    ax.plot(x.A1, y.A1, t.A1, label='parametric curve')
+    ax.plot(x, y, t, label='parametric curve')
     ax.legend()
     plt.show()
     
@@ -86,15 +98,19 @@ def save_graph(x,y):
 def save_graph3d(x,y,t):
     fig = plt.figure()
     ax = fig.gca(projection='3d')
-    ax.plot(x.A1, y.A1, t.A1, label='parametric curve')
+    ax.plot(x, y, t, label='parametric curve')
     ax.legend()
     plt.savefig('iter'+str(k)+'.png')
     
+def updateD():
+    return (np.concatenate(( np.concatenate( (D1-a(x,y)*D0, -c(x,y)*D0  ), axis=0) , np.concatenate( (-b(x,y)*D0, D1-d(x,y)*D0 ), axis=0)),axis=1))
+    
+    
 #---MAIN---
-t = np.asmatrix(np.linspace(LBOUND,UBOUND,POINTS)).T
-u_old = np.asmatrix(np.zeros(2*POINTS)).T
-#u = np.asmatrix(np.ones(2*POINTS)).T
-u = np.asmatrix(20*np.random.rand(2*POINTS) - 10).T
+t = (np.linspace(LBOUND,UBOUND,POINTS)).T
+u_old = (np.zeros(2*POINTS)).T
+u = (np.ones(2*POINTS)).T
+#u = (20*np.random.rand(2*POINTS) - 10).T
 x = u[:POINTS]
 y = u[POINTS:]
 
@@ -104,18 +120,18 @@ if INITIAL is not None:
     y[index] = INITIAL[2]
 
 k = 0
+D = updateD()
 while f(u) > EPSILON and np.isfinite(f(u)):
-    grad = (df(u))
-    s = step_size(D*u,D*grad,tech='dynamic')
+    grad = sobolev(df(u))
+    s = 10**-4
     u_old = np.copy(u)
     u -= s*grad
     k=k+1
     if k%2**5 == 0:
         print(k, f(u))
         graph3d(x,y,t)
+    D = updateD()
 
 graph3d(x,y,t)
 graph(x,y)
-
-
 

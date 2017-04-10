@@ -16,13 +16,11 @@ EPSILON = 2**-16
 UPPER = 2**32
 INTERVAL_LENGTH = (BOUNDS[1]-BOUNDS[0])/(POINTS - 1)
 
-d0   = np.eye(POINTS-1,POINTS) + np.roll(np.eye(POINTS-1,POINTS),1,1) / 2
-d1   = -1*np.eye(POINTS-1,POINTS) + np.roll(np.eye(POINTS-1,POINTS),1,1) / INTERVAL_LENGTH
+D0   = np.eye(POINTS-1,POINTS) + np.roll(np.eye(POINTS-1,POINTS),1,1) / 2
+D1   = -1*np.eye(POINTS-1,POINTS) + np.roll(
+        np.eye(POINTS-1,POINTS),1,1) / INTERVAL_LENGTH
 ZERO = np.zeros(d0.shape)
-D0   = (np.concatenate(( np.concatenate( (d0, ZERO), axis=0) , np.concatenate( (ZERO, d0), axis=0)),axis=1))
-D1   = (np.concatenate(( np.concatenate( (d1, ZERO), axis=0) , np.concatenate( (ZERO, d1), axis=0)),axis=1))
 A    = D0.T @ D0 + D1.T @ D1
-
 
 def graph3d(x,y,t):
     fig = plt.figure()
@@ -31,26 +29,31 @@ def graph3d(x,y,t):
     ax.legend()
     plt.show()
 
-f =             lambda u:          D1 @ (x*u) - D0 @ (y*u)
-df =            lambda u:          x*(D1) + y*(-D0) #wrong
-g =             lambda u:          D1 @ (y*u) + D0 @ (x*u)
-dg =            lambda u:          x*(D0) + y*(D1) #wrong
-phi =           lambda f,g:          0.5*(f.dot(f)+g.dot(g))
-dphi =          lambda f,df,g,dg:    df.T @ f + dg.T @ g
-sobolev =       lambda u:            np.linalg.solve(A,u)
+p =             lambda x,y:     y
+q =             lambda x,y:     -x
+dpu =           lambda x,y:     0
+dpv =           lambda x,y:     1
+dqu =           lambda x,y:     -1
+dqv =           lambda x,y:     0
+phi =           lambda D,u:     .5*(D@u).dot(D@u)
+Eg =            lambda D,u:       D.T @ D @ u #wrong
+sobolev =       lambda Eg:      np.linalg.solve(A,Eg)
 
 t = np.linspace(BOUNDS[0],BOUNDS[1],POINTS)
 u = 20*np.random.rand(2*POINTS) - 10
-x = np.concatenate([np.ones(POINTS),np.zeros(POINTS)])
-y = np.concatenate([np.zeros(POINTS),np.ones(POINTS)])
+x = u[POINTS:]
+y = u[:POINTS]
+D    = (np.concatenate((np.concatenate( (D1-dpu(x,y)*D0, -dqu(x,y)*D0  ),axis=0),
+        np.concatenate( (-dpv(x,y)*D0, D1-dqv(x,y)*D0 ), axis=0)),axis=1))
 
 k = 0
-while UPPER > phi(f(u), g(u)) > EPSILON:
-    grad = (dphi(f(u),df(u),g(u),dg(u)))
+while UPPER >  phi(D,u) > EPSILON:
+    D    = (np.concatenate((np.concatenate( (D1-dpu(x,y)*D0, -dqu(x,y)*D0  ),axis=0),
+        np.concatenate( (-dpv(x,y)*D0, D1-dqv(x,y)*D0 ), axis=0)),axis=1))
+    grad = (Eg(D,u))
     s = 0.0001
     u -= s*grad
     k+=1
     if (k%2**0) == 0:
-        print(k,phi(f(u),g(u)))
-        plt.plot(u[POINTS:],u[:POINTS])
-        plt.show()
+        print(k,phi(D,u))
+        graph3d(x,y,t)
