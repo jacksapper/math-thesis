@@ -14,25 +14,21 @@ from mpl_toolkits.mplot3d import Axes3D
 from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import spsolve
 #---CONSTANTS---
-LBOUND  = -100.
-UBOUND  = 100.
+LBOUND  = -10.
+UBOUND  = 10.
 POINTS  = 2**7
 EPSILON = 10**-12
 #INITIAL = (t0,x0,y0) or None
 INITIAL = None
 
 t = np.mat(np.linspace(LBOUND,UBOUND,POINTS)).T
-u = np.mat(np.random.rand(2*POINTS)).T
+u = np.mat(np.ones(2*POINTS)).T
 x = u[:POINTS]
 y = u[POINTS:]
 
-a = -1/3
-b = -2/3
-c = -2/3
-d = -1/3
+a,b,c,d = -1,0,0,-1
 
 display = [1,10,100,1000,10000,100000]
-#---DERIVED CONSTANTS---DON'T CHANGE THESE, CHANGE THE REAL CONSTANTS
 INTERVAL_LENGTH = (UBOUND-LBOUND)/(POINTS-1)
 I = np.mat(np.eye(POINTS-1,POINTS))
 
@@ -42,12 +38,16 @@ D1   = np.mat(-1*np.eye(POINTS-1,POINTS) \
 + np.roll(np.eye(POINTS-1,POINTS),1,1)) / INTERVAL_LENGTH
 ZERO = np.zeros(D0.shape)
 
-D    = csr_matrix(np.concatenate(( np.concatenate( (D1-a*D0, -c*D0  ), axis=0),
-                  np.concatenate( (-b*D0, D1-d*D0 ), axis=0)),axis=1))
-A0   = csr_matrix(np.concatenate(( np.concatenate( (D0, ZERO), axis=0),
-                  np.concatenate( (ZERO, D0), axis=0)),axis=1))
-A1   = csr_matrix(np.concatenate(( np.concatenate( (D1, ZERO), axis=0),
-                  np.concatenate( (ZERO, D1), axis=0)),axis=1))
+D    = csr_matrix(
+       np.concatenate(
+      (np.concatenate((D1-a*D0,-c*D0),axis=0),
+       np.concatenate((-b*D0,D1-d*D0),axis=0)),axis=1))
+A0   = csr_matrix(
+       np.concatenate((np.concatenate((D0,ZERO),axis=0),
+       np.concatenate((ZERO,D0),axis=0)),axis=1))
+A1   = csr_matrix(
+       np.concatenate((np.concatenate((D1,ZERO),axis=0),
+       np.concatenate((ZERO,D1),axis=0)),axis=1))
 
 A    = A0.T * A0 + A1.T * A1
 #A = A0.T * A0 + D.T * D
@@ -86,8 +86,10 @@ def graph(x,y1,y2=None):
 def graph3d(x,y,t): 
     fig = plt.figure()
     ax = fig.gca(projection='3d')
+    ax.set_xlabel('x(t)')
+    ax.set_ylabel('y(t)')
     ax.plot(x.A1, y.A1, t.A1, label='parametric curve')
-    ax.legend()
+    #ax.legend()
     plt.show()
     
 def save_graph(x,y):
@@ -112,7 +114,7 @@ if INITIAL is not None:
 
 k = 0
 
-#plt.gca(projection='3d')
+plt.gca(projection='3d')
 #plt.xlim(-1.2,1.2)
 #plt.ylim(-1.2,1.2)
 while f(u) > EPSILON and np.isfinite(f(u)):
@@ -124,10 +126,14 @@ while f(u) > EPSILON and np.isfinite(f(u)):
         print("|",k,"|",
         round(f(u),3), "|",
         round(s,6),"|")
-        #plt.plot(x.A1,y.A1,t.A1,label='k={num}'.format(num=k))
+        
         
 		  
-        
+graph3d(x,y,t)
+plt.plot(t,x,label='x(t)')
+plt.plot(t,y,label='y(t)')
+plt.legend(loc='lower right')
+plt.show()
 print(k)
 #plt.legend(loc='lower right')
 #plt.savefig(
